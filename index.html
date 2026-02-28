@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estudio Tesis - Juan Camilo Rodriguez</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="header">
+    <h1>Sistemas de Informacion Gerencial en la Gestion Educativa</h1>
+    <div class="subtitle">Herramienta de estudio - Defensa de tesis doctoral</div>
+  </header>
+
+  <nav class="nav">
+    <button class="nav-btn active" data-section="content">Contenido</button>
+    <button class="nav-btn" data-section="quiz">Quiz</button>
+    <button class="nav-btn" data-section="flashcards">Flashcards</button>
+  </nav>
+
+  <main class="main">
+
+    <!-- SECCION: CONTENIDO DE LA TESIS -->
+    <div id="section-content" class="section active">
+      <div id="accordion-container"></div>
+    </div>
+
+    <!-- SECCION: QUIZ -->
+    <div id="section-quiz" class="section">
+      <div id="quiz-filter-container" class="quiz-controls"></div>
+      <div id="quiz-progress" class="quiz-progress"></div>
+      <div id="quiz-area"></div>
+    </div>
+
+    <!-- SECCION: FLASHCARDS -->
+    <div id="section-flashcards" class="section">
+      <div id="fc-filter-container" class="fc-controls"></div>
+      <div id="fc-counter" class="fc-counter"></div>
+      <div id="fc-container" class="fc-container"></div>
+      <div id="fc-nav" class="fc-nav"></div>
+    </div>
+
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/quiz.js"></script>
+  <script src="js/flashcards.js"></script>
+
+</body>
+</html>
