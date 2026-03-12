@@ -94,6 +94,28 @@ body {
   font-weight: 600;
 }
 
+.nav-btn-link {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.teleprompter-link {
+  display: inline-block;
+  background: var(--primary);
+  color: #fff;
+  text-decoration: none;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.teleprompter-link:hover {
+  background: var(--primary-light);
+}
+
 /* --- MAIN CONTENT --- */
 
 .main {

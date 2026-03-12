@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teleprompter - Discurso de Defensa</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a0a;
+    color: #e0e0e0;
+    font-family: 'Georgia', serif;
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  /* Control bar */
+  #controls {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: rgba(20, 20, 20, 0.95);
+    border-bottom: 2px solid #164063;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    transition: opacity 0.3s;
+  }
+
+  #controls.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #controls button {
+    background: #164063;
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    font-family: sans-serif;
+  }
+
+  #controls button:hover { background: #1e5a8a; }
+  #controls button.active { background: #c9a227; color: #000; }
+
+  #controls label {
+    color: #aaa;
+    font-size: 14px;
+    font-family: sans-serif;
+  }
+
+  #controls input[type="range"] {
+    width: 120px;
+    accent-color: #c9a227;
+  }
+
+  #speed-display, #font-display, #time-display, #slide-display {
+    color: #c9a227;
+    font-family: monospace;
+    font-size: 14px;
+    min-width: 40px;
+  }
+
+  #time-display {
+    margin-left: auto;
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  /* Mirror mode */
+  body.mirror #content { transform: scaleX(-1); }
+
+  /* Prompter content */
+  #prompter {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+  }
+
+  #content {
+    position: absolute;
+    top: 100vh;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    max-width: 900px;
+    padding-bottom: 100vh;
+  }
+
+  /* Reading guide line */
+  #guide {
+    position: fixed;
+    top: 35%;
+    left: 5%;
+    right: 5%;
+    height: 2px;
+    background: rgba(201, 162, 39, 0.3);
+    pointer-events: none;
+    z-index: 50;
+  }
+
+  /* Fade edges */
+  #fade-top {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: linear-gradient(to bottom, #0a0a0a, transparent);
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  #fade-bottom {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 150px;
+    background: linear-gradient(to top, #0a0a0a, transparent);
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  /* Slide headers */
+  .slide-header {
+    color: #c9a227;
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-top: 80px;
+    margin-bottom: 10px;
+    padding: 10px 15px;
+    border-left: 4px solid #c9a227;
+    background: rgba(201, 162, 39, 0.08);
+    font-family: sans-serif;
+    letter-spacing: 1px;
+  }
+
+  .slide-header:first-child { margin-top: 0; }
+
+  .time-badge {
+    display: inline-block;
+    background: rgba(201, 162, 39, 0.2);
+    color: #c9a227;
+    font-size: 0.7em;
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-left: 10px;
+    font-family: monospace;
+  }
+
+  /* Speech text */
+  .speech {
+    font-size: 1.8em;
+    line-height: 1.7;
+    margin: 25px 0;
+    color: #ffffff;
+  }
+
+  /* Tips */
+  .tip {
+    background: rgba(22, 64, 99, 0.25);
+    border-left: 3px solid #2671b4;
+    padding: 12px 18px;
+    margin: 20px 0;
+    font-size: 0.85em;
+    color: #7cb8e0;
+    font-family: sans-serif;
+    line-height: 1.5;
+    border-radius: 0 6px 6px 0;
+  }
+
+  .tip-label {
+    font-weight: bold;
+    color: #2671b4;
+    margin-bottom: 4px;
+    font-size: 0.8em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .tip.hidden { display: none; }
+
+  /* Separator */
+  .slide-sep {
+    border: none;
+    border-top: 1px solid rgba(201, 162, 39, 0.15);
+    margin: 40px 0;
+  }
+
+  /* Pause overlay */
+  #pause-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 80;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #pause-overlay.visible {
+    display: flex;
+  }
+
+  #pause-overlay span {
+    font-size: 60px;
+    color: #c9a227;
+    font-family: sans-serif;
+  }
+
+  /* Keyboard hints */
+  #hints {
+    position: fixed;
+    bottom: 10px;
+    right: 15px;
+    z-index: 100;
+    font-family: monospace;
+    font-size: 11px;
+    color: #555;
+    text-align: right;
+    line-height: 1.6;
+  }
+
+  kbd {
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 11px;
+    color: #888;
+  }
+
+  /* Index panel */
+  #index-panel {
+    position: fixed;
+    top: 0;
+    left: -320px;
+    width: 320px;
+    height: 100vh;
+    background: rgba(10, 10, 10, 0.97);
+    border-right: 2px solid #164063;
+    z-index: 200;
+    transition: left 0.3s ease;
+    overflow-y: auto;
+    padding: 70px 0 20px 0;
+  }
+
+  #index-panel.open { left: 0; }
+
+  #index-panel h3 {
+    color: #c9a227;
+    font-family: sans-serif;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 0 20px 15px;
+    border-bottom: 1px solid rgba(201,162,39,0.2);
+    margin-bottom: 5px;
+  }
+
+  .index-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.15s;
+    text-decoration: none;
+  }
+
+  .index-item:hover { background: rgba(201, 162, 39, 0.1); }
+  .index-item.active { background: rgba(201, 162, 39, 0.15); border-left: 3px solid #c9a227; }
+
+  .index-num {
+    color: #c9a227;
+    font-family: monospace;
+    font-size: 13px;
+    font-weight: bold;
+    min-width: 30px;
+  }
+
+  .index-title {
+    color: #ddd;
+    font-family: sans-serif;
+    font-size: 14px;
+    flex: 1;
+  }
+
+  .index-time {
+    color: #666;
+    font-family: monospace;
+    font-size: 11px;
+    margin-left: 8px;
+  }
+
+  /* Index toggle button */
+  #btn-index {
+    position: fixed;
+    top: 58px;
+    left: 10px;
+    z-index: 210;
+    background: #164063;
+    color: #fff;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    font-size: 18px;
+    cursor: pointer;
+    font-family: sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+  }
+
+  #btn-index:hover { background: #1e5a8a; }
+  #btn-index.active { background: #c9a227; color: #000; }
+
+  /* Overlay to close index when clicking outside */
+  #index-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 190;
+  }
+
+  #index-overlay.open { display: block; }
+</style>
+</head>
+<body>
+
+<div id="controls">
+  <button id="btn-play" onclick="togglePlay()">&#9654; Play</button>
+  <label>Velocidad:</label>
+  <input type="range" id="speed" min="0.2" max="5" step="0.1" value="1.2">
+  <span id="speed-display">1.2</span>
+  <label>Fuente:</label>
+  <input type="range" id="fontsize" min="1" max="4" step="0.1" value="1.8">
+  <span id="font-display">1.8</span>
+  <button id="btn-tips" onclick="toggleTips()">Tips: ON</button>
+  <button id="btn-mirror" onclick="toggleMirror()">Espejo</button>
+  <button onclick="resetPosition()">Reiniciar</button>
+  <span id="slide-display"></span>
+  <span id="time-display">00:00</span>
+</div>
+
+<div id="prompter">
+  <div id="content">
+
+    <!-- SLIDE 1 -->
+    <div class="slide-header" data-slide="1">SLIDE 1: PORTADA / TITULO <span class="time-badge">~30 seg</span></div>
+    <p class="speech">Buenos dias / Buenas tardes, miembros del jurado.</p>
+    <p class="speech">Mi nombre es Juan Camilo Rodriguez Restrepo, y hoy presento ante ustedes mi trabajo de tesis doctoral titulado "Sistemas de Informacion Gerencial en la Gestion Educativa: un Analisis desde la Revision Sistematica", desarrollado bajo la direccion del Doctor Juan Pablo Ucan Pech.</p>
+    <p class="speech">Agradezco al jurado por su tiempo y disposicion para evaluar esta investigacion.</p>
+    <div class="tip"><div class="tip-label">TIP</div>Mira al jurado, no a la pantalla. Habla con calma y confianza. Este es tu momento de causar una buena primera impresion.</div>
+
+    <hr class="slide-sep">
+
+    <!-- SLIDE 2 -->
+    <div class="slide-header" data-slide="2">SLIDE 2: INTRODUCCION <span class="time-badge">~2 min</span></div>
+    <p class="speech">Vivimos en una era donde la Cuarta Revolucion Industrial y la transformacion digital estan redefiniendo como operan las organizaciones, y las instituciones educativas no son la excepcion.</p>
+    <p class="speech">Los Sistemas de Informacion Gerencial, conocidos como SIG, han dejado de ser simples herramientas operativas de registro y reporte, para convertirse en recursos estrategicos que permiten la toma de decisiones basada en evidencia.</p>
+    <p class="speech">Cuando hablamos de SIG en educacion, nos referimos a cuatro grandes tipologias: los EMIS para gestion educativa a nivel de sistema, los SIS para informacion estudiantil, los ERP que integran procesos administrativos, y las herramientas de BI y Analitica que permiten el analisis estrategico de datos.</p>
+    <p class="speech">Sin embargo, y aqui esta el problema central, la adopcion de estos sistemas no siempre se traduce en mejoras efectivas, medibles y sostenibles en la gestion educativa.</p>
+    <p class="speech">Por eso, esta investigacion realiza una Revision Sistematica de la Literatura del periodo 2015 a 2025, utilizando el protocolo de Kitchenham y Charters junto con el estandar PRISMA 2020, con el objetivo de identificar patrones, barreras, facilitadores, y proponer recomendaciones concretas.</p>
+    <div class="tip"><div class="tip-label">TIP</div>Enfatiza la frase "no siempre se traduce en mejoras efectivas" con una pausa. Eso plantea la tension que motiva tu investigacion.</div>
+
+    <hr class="slide-sep">
+
+    <!-- SLIDE 3 -->
+    <div class="slide-header" data-slide="3">SLIDE 3: EL PROBLEMA <span class="time-badge">~2-3 min</span></div>
+    <p class="speech">La revision de la literatura nos permitio identificar ocho problemas recurrentes que afectan la implementacion exitosa de los SIG en educacion. Los voy a agrupar en tres grandes ejes para que quede mas claro:</p>
+    <p class="speech">Primero, los problemas TECNOLOGICOS: existe una ausencia de infraestructura adecuada, especialmente en areas rurales donde la conectividad es limitada. Ademas, los sistemas operan de forma aislada, uno para matriculas, otro para notas, otro para finanzas, generando lo que llamamos "silos de informacion" donde los datos no se comunican entre si.</p>
+    <p class="speech">Segundo, los problemas ORGANIZACIONALES, que la evidencia muestra como los mas persistentes: existe una fuerte resistencia al cambio, una falta de liderazgo con vision digital, y una capacitacion deficiente que se limita a ensenar a operar el sistema pero no a usar los datos estrategicamente.</p>
+    <p class="speech">Y tercero, los problemas ESTRUCTURALES del campo: las implementaciones tienden a ser de "talla unica", ignorando que cada institucion tiene realidades distintas. La investigacion existente esta fragmentada y dispersa, sin una sintesis critica que consolide la evidencia. Y en America Latina, estas brechas se profundizan por deficits de conectividad, talento humano e inversion en gobernanza de datos.</p>
+    <p class="speech">El resultado de todo esto es que muchas decisiones estrategicas en las instituciones educativas aun se basan en intuicion y no en datos.</p>
+    <div class="tip"><div class="tip-label">TIP</div>La agrupacion en 3 ejes (tecnologico, organizacional, estructural) no esta en el slide pero ayuda al jurado a procesar la informacion. Usa tus manos para marcar: "primero, segundo, tercero".</div>
+
+    <hr class="slide-sep">
+
+    <!-- SLIDE 4 -->
+    <div class="slide-header" data-slide="4">SLIDE 4: PREGUNTAS DE INVESTIGACION <span class="time-badge">~1-2 min</span></div>
+    <p class="speech">Frente a estos problemas, nuestra investigacion se plantea una pregunta general: Cual es el estado del uso de los SIG en las instituciones educativas durante los ultimos diez anos, y cuales son los factores clave, barreras y estrategias efectivas para su exitosa integracion?</p>
+    <p class="speech">Esta pregunta general se descompone en cinco preguntas especificas que guian el estudio:</p>
+    <p class="speech">La primera busca identificar que enfoques metodologicos son mas efectivos para medir el impacto de los SIG.</p>
+    <p class="speech">La segunda indaga sobre los factores organizacionales y las limitaciones tecnologicas que afectan la implementacion.</p>
+    <p class="speech">La tercera busca clasificar las barreras recurrentes y emergentes.</p>
+    <p class="speech">La cuarta se enfoca en detectar las brechas en la literatura academica.</p>
+    <p class="speech">Y la quinta busca proponer recomendaciones practicas diferenciadas por contexto.</p>
+    <p class="speech">Cada una de estas preguntas se corresponde directamente con un objetivo especifico.</p>
+    <div class="tip"><div class="tip-label">TIP</div>No leas las preguntas textualmente del slide. Parafraseaalas de forma natural. El jurado puede leerlas; tu solo necesitas mostrar que las dominas.</div>
+
+    <hr class="slide-sep">
+
+    <!-- SLIDE 5 -->
+    <div class="slide-header" data-slide="5">SLIDE 5: OBJETIVOS <span class="time-badge">~1 min</span></div>
+    <p class="speech">El objetivo general de esta investigacion es analizar la implantacion y los efectos de los SIG en las instituciones educativas, mediante una revision sistematica cualitativa de la literatura de los ultimos diez anos.</p>
+    <p class="speech">Los cinco objetivos especificos van desde evaluar los enfoques metodologicos, pasando por determinar factores organizacionales y tecnologicos, clasificar barreras, identificar brechas en la literatura, hasta proponer recomendaciones practicas.</p>
+    <p class="speech">Es importante destacar que estos objetivos no son independientes entre si; se articulan de forma progresiva. Los primeros cuatro construyen la base de evidencia que permite al quinto objetivo generar recomendaciones fundamentadas y diferenciadas por contexto.</p>
+    <div class="tip"><div class="tip-label">TIP</div>Pasa rapido por este slide. El jurado ya leyo las preguntas en el slide anterior y la estructura es la misma. Enfoca tu energia en la frase de articulacion progresiva, que muestra que tu diseno es coherente.</div>
+
+    <hr class="slide-sep">
+
+    <!-- SLIDE 6 -->
+    <div class="slide-header" data-slide="6">SLIDE 6: SUPUESTO DE INVESTIGACION <span class="time-badge">~2 min</span></div>
+    <p class="speech">Esta investigacion parte de un supuesto central, y quiero enfatizar que este es probablemente el aporte mas importante de la tesis:</p>
+    <p class="speech">Partimos de que los SIG se configuran como herramientas estrategicas cuya relevancia y efectividad NO son inherentes al software que se utiliza, sino que se construyen en la interaccion con las practicas de gestion, las necesidades institucionales y las condiciones del entorno.</p>
+    <p class="speech">La evidencia analizada verifico este supuesto de forma concluyente a traves de tres factores:</p>
+    <p class="speech">Primero, el factor ORGANIZACIONAL: la efectividad del SIG esta mediada por un liderazgo fuerte y una capacitacion estrategica. La resistencia cultural y la falta de vision directiva son las principales causas de fracaso.</p>
+    <p class="speech">Segundo, el factor TECNOLOGICO y CONTEXTUAL: el exito esta severamente limitado por la infraestructura digital disponible y la calidad de los datos de entrada. Si los datos que alimentan el sistema son malos, ningun software producira resultados utiles.</p>
+    <p class="speech">Tercero, el factor ESTRATEGICO: el SIG solo genera valor cuando responde a una necesidad de gestion especifica de la institucion, no cuando es una adopcion impuesta desde arriba.</p>
+    <p class="speech">Por lo tanto, los SIG son necesarios, pero NO suficientes. Su transformacion en herramientas estrategicas depende de la inversion en el componente humano y organizativo. Esto es la perspectiva socio-tecnica que guia todo este estudio.</p>
+    <div class="tip"><div class="tip-label">TIP</div>Esta es una de las slides mas IMPORTANTES. Haz pausas dramaticas antes de "NO son inherentes al software" y antes de "necesarios pero NO suficientes". Estos son los mensajes fuerza de tu tesis.</div>
+
+    <hr class="slide-sep">
+
+    <!-- SLIDE 7 -->
+    <div class="slide-header" data-slide="7">SLIDE 7: MARCO TEORICO <span class="time-badge">~2-3 min</span></div>
+    <p class="speech">El marco teorico de esta investigacion se construye sobre tres pilares.</p>
+    <p class="speech">El primero son las tipologias de SIG en educacion. Identificamos cuatro tipos: los EMIS, que son sistemas nacionales o regionales que recopilan datos para politicas publicas, como el seguimiento de los Objetivos de Desarrollo Sostenible. Los SIS, que gestionan el ciclo de vida del estudiante: matricula, calificaciones, asistencia. Los ERP, que integran multiples procesos administrativos en una sola plataforma, eliminando los silos de informacion. Y las herramientas de BI y Analitica, que representan el nivel mas alto de madurez, transformando datos en informacion estrategica.</p>
+    <p class="speech">El segundo pilar son los modelos teoricos. Utilizamos tres marcos principales: el modelo de exito de DeLone y McLean, que establece que el exito de un sistema depende de la calidad del sistema, la calidad de la informacion y la calidad del servicio. El marco TOE de Tornatzky y Fleischer, que analiza la adopcion desde los contextos tecnologico, organizacional y del entorno. Y la teoria UTAUT de Venkatesh, que explica por que los usuarios individuales aceptan o rechazan la tecnologia.</p>
+    <p class="speech">Y el tercer pilar, que es transversal a toda la investigacion, es la perspectiva socio-tecnica: entender los SIG no como software aislado, sino como ecosistemas donde interactuan tecnologia, personas, procesos y contexto.</p>
+    <div class="tip"><div class="tip-label">TIP</div>Estructura tu discurso en "tres pilares". Esto le da claridad al jurado y demuestra dominio. Si el jurado pregunta sobre algun modelo, tienes detalle de respaldo en la guia de estudio.</div>
+
+    <hr class="slide-sep">
+
+    <!-- SLIDE 8 -->
+    <div class="slide-header" data-slide="8">SLIDE 8: METODOLOGIA <span class="time-badge">~3 min</span></div>
+    <p class="speech">La metodologia de este estudio sigue un paradigma cualitativo-interpretativo, utilizando como metodo la Revision Sistematica de la Literatura.</p>
+    <p class="speech">Para garantizar el rigor, combinamos dos instrumentos: el protocolo de Kitchenham y Charters para la planificacion, ejecucion y reporte de la revision, y el estandar PRISMA 2020 para la transparencia del proceso de seleccion.</p>
+    <p class="speech">Nuestra busqueda cubrio el periodo de 2015 a 2025, en tres idiomas: espanol, ingles y portugues. Consultamos multiples bases de datos internacionales como Scopus, Web of Science, ERIC y ScienceDirect, asi como fuentes regionales como SciELO, Redalyc y Dialnet.</p>
+    <p class="speech">El proceso de seleccion siguio el diagrama de flujo PRISMA. Partimos de 122 registros identificados, eliminamos 17 duplicados, aplicamos criterios de inclusion y exclusion, y llegamos a 64 estudios incluidos en la sintesis final: 52 internacionales y 12 nacionales colombianos.</p>
+    <p class="speech">Para el analisis, utilizamos dos instrumentos complementarios: Microsoft Excel para la matriz bibliometrica y extraccion de datos, y ATLAS.ti para la codificacion cualitativa. En ATLAS.ti codificamos los 64 estudios usando un libro de codigos tematico que nos permitio analizar co-ocurrencias entre factores, es decir, identificar que variables aparecen juntas con mayor frecuencia.</p>
+    <div class="tip"><div class="tip-label">TIP</div>El jurado probablemente pregunte sobre la metodologia. Ten claros los NUMEROS: 122 iniciales, 17 duplicados, 64 finales (52 internacionales + 12 nacionales). Y ten claro POR QUE usaste ATLAS.ti: para ir mas alla del conteo y encontrar RELACIONES entre factores.</div>
+
+    <hr class="slide-sep">
+
+    <!-- SLIDE 9 -->
+    <div class="slide-header" data-slide="9">SLIDE 9: ANALISIS DE RESULTADOS <span class="time-badge">~4-5 min</span></div>
+    <p class="speech">Ahora llegamos a los hallazgos, que es la parte mas sustantiva de esta presentacion.</p>
+    <p class="speech">Organizare los resultados en cinco dimensiones clave.</p>
+    <p class="speech">En cuanto al USO GERENCIAL, encontramos que los SIG facilitan la toma de decisiones y la gestion de recursos, pero esto ocurre principalmente en universidades que han implementado herramientas avanzadas como ERP y BI. En instituciones mas pequenas o de educacion basica, los SIG siguen siendo usados casi exclusivamente para registro y reporte operativo.</p>
+    <p class="speech">En cuanto a las BARRERAS, y este es un hallazgo central, identificamos que las barreras organizacionales son mas persistentes que las tecnologicas. La resistencia al cambio fue la barrera mas mencionada, apareciendo en la gran mayoria de los estudios. Le siguen la falta de interoperabilidad entre sistemas, que genera silos de informacion, y la deficiente capacitacion del personal.</p>
+    <p class="speech">En cuanto a los FACILITADORES, el factor mas determinante es el liderazgo institucional comprometido con la vision digital. Sin un liderazgo que promueva activamente el uso estrategico de los datos, el SIG se convierte en una herramienta subutilizada. Le siguen la gobernanza de datos, la capacitacion continua y el apoyo gubernamental.</p>
+    <p class="speech">En cuanto al IMPACTO, cuando los SIG se implementan correctamente, se evidencian mejoras en transparencia, rendicion de cuentas y calidad educativa. Los sistemas de BI permiten identificar estudiantes en riesgo de desercion, optimizar recursos y apoyar la planificacion basada en evidencia.</p>
+    <p class="speech">Finalmente, la COMPARACION entre contextos revela una brecha significativa: a nivel global existe mayor avance con BI y ERP, mientras que en contextos nacionales como Colombia, los SIG aun estan en fases iniciales, predominando los SIS y EMIS en su uso mas basico.</p>
+    <div class="tip"><div class="tip-label">TIP</div>Este es el slide donde demuestras que realmente analizaste la evidencia. Habla con seguridad y usa datos concretos. Si el jurado te interrumpe con preguntas, es buena senal: significa que el tema les interesa. Responde con calma y vuelve a tu hilo.</div>
+
+    <hr class="slide-sep">
+
+    <!-- SLIDE 10 -->
+    <div class="slide-header" data-slide="10">SLIDE 10: CONCLUSIONES <span class="time-badge">~2-3 min</span></div>
+    <p class="speech">A partir del analisis, llegamos a cinco conclusiones principales.</p>
+    <p class="speech">Primera: el exito de los SIG depende de la interaccion socio-tecnica. No basta con adquirir tecnologia; se necesita liderazgo, cultura de datos y capacitacion estrategica. La tecnologia sola no genera impacto.</p>
+    <p class="speech">Segunda: las barreras organizacionales, como la resistencia al cambio y la falta de vision digital, son mas persistentes y dificiles de superar que las barreras puramente tecnologicas. Esto confirma que el problema es de personas y procesos, no de software.</p>
+    <p class="speech">Tercera: la gobernanza de datos emerge como el factor mas critico. Los silos de informacion que encontramos en las instituciones educativas no son un problema tecnico de software; son un problema de politicas, de definir quien es responsable de los datos, como se asegura su calidad, y como se comparten.</p>
+    <p class="speech">Cuarta: existe una brecha significativa en investigacion comparativa y longitudinal, especialmente en contextos de bajos recursos como America Latina. Necesitamos mas estudios que midan el impacto real de los SIG en el tiempo.</p>
+    <p class="speech">Y quinta: cuando los SIG se usan estrategicamente, y no solo operativamente, se logra optimizar la eficiencia administrativa y fundamentar la toma de decisiones en datos concretos.</p>
+    <div class="tip"><div class="tip-label">TIP</div>Enumera las conclusiones con los dedos (primera, segunda...). Esto ayuda al jurado a seguir tu estructura. En la tercera conclusion, haz enfasis en que "no es un problema tecnico, es un problema de politicas". Esa es una frase que demuestra profundidad analitica.</div>
+
+    <hr class="slide-sep">
+
+    <!-- SLIDE 11 -->
+    <div class="slide-header" data-slide="11">SLIDE 11: RECOMENDACIONES <span class="time-badge">~2 min</span></div>
+    <p class="speech">Las recomendaciones de esta investigacion se dirigen a tres audiencias.</p>
+    <p class="speech">Para los DIRECTIVOS y administradores educativos, la recomendacion principal es priorizar la gobernanza de datos antes que la compra de software. Esto significa crear comites que definan politicas claras de calidad de datos, interoperabilidad y responsabilidad sobre la informacion. Tambien es fundamental desarrollar liderazgo con vision digital e implementar capacitacion estrategica que ensene a usar la analitica para tomar decisiones, y no solo a operar el sistema.</p>
+    <p class="speech">Para los responsables de POLITICAS PUBLICAS, proponemos promover estandares abiertos de intercambio de datos a nivel nacional y regional, para superar la fragmentacion entre sistemas. E invertir en infraestructura critica, especialmente conectividad en instituciones de bajos recursos y areas rurales, como condicion habilitante para que cualquier SIG funcione.</p>
+    <p class="speech">Y para la COMUNIDAD ACADEMICA, recomendamos realizar estudios longitudinales de tres a cinco anos que midan el impacto real de los SIG en indicadores educativos concretos, y desarrollar investigacion comparativa en contextos de America Latina, que es donde mas se necesita y menos se ha estudiado.</p>
+    <div class="tip"><div class="tip-label">TIP</div>Diferencia claramente las tres audiencias con tono de voz. Esto muestra que tus recomendaciones no son genericas sino especificas y accionables. Si el jurado pregunta "y como se implementaria X?", tienes la base para responder con confianza.</div>
+
+    <hr class="slide-sep">
+
+    <!-- SLIDE 12 -->
+    <div class="slide-header" data-slide="12">SLIDE 12: CIERRE / AGRADECIMIENTO <span class="time-badge">~30 seg</span></div>
+    <p class="speech">Para cerrar, quisiera resumir el mensaje central de esta investigacion en una frase: los Sistemas de Informacion Gerencial son herramientas necesarias, pero no suficientes. La verdadera transformacion de la gestion educativa no esta en el software, sino en las personas, el liderazgo y la cultura de datos que lo acompanan.</p>
+    <p class="speech">Agradezco al jurado por su atencion, a mi director el Doctor Juan Pablo Ucan Pech por su guia durante todo este proceso, y a TECH Universidad Tecnologica por esta oportunidad.</p>
+    <p class="speech">Quedo a disposicion para sus preguntas.</p>
+    <div class="tip"><div class="tip-label">TIP</div>Termina mirando al jurado con confianza. No te apures. La frase "quedo a disposicion para sus preguntas" es tu senal de que terminaste con seguridad, no con prisa.</div>
+
+    <hr class="slide-sep">
+
+    <div class="slide-header" style="background: rgba(201,162,39,0.15);">FIN DEL DISCURSO</div>
+    <p class="speech" style="text-align:center; color: #c9a227; font-size: 1.2em;">Mucho exito, Juan Camilo!</p>
+
+  </div>
+</div>
+
+<button id="btn-index" onclick="toggleIndex()" title="Indice (I)">&#9776;</button>
+<div id="index-overlay" onclick="toggleIndex()"></div>
+<div id="index-panel">
+  <h3>Indice de Slides</h3>
+  <div class="index-item" data-target="1"><span class="index-num">1</span><span class="index-title">Portada / Titulo</span><span class="index-time">~30s</span></div>
+  <div class="index-item" data-target="2"><span class="index-num">2</span><span class="index-title">Introduccion</span><span class="index-time">~2 min</span></div>
+  <div class="index-item" data-target="3"><span class="index-num">3</span><span class="index-title">El Problema</span><span class="index-time">~2-3 min</span></div>
+  <div class="index-item" data-target="4"><span class="index-num">4</span><span class="index-title">Preguntas de Investigacion</span><span class="index-time">~1-2 min</span></div>
+  <div class="index-item" data-target="5"><span class="index-num">5</span><span class="index-title">Objetivos</span><span class="index-time">~1 min</span></div>
+  <div class="index-item" data-target="6"><span class="index-num">6</span><span class="index-title">Supuesto de Investigacion</span><span class="index-time">~2 min</span></div>
+  <div class="index-item" data-target="7"><span class="index-num">7</span><span class="index-title">Marco Teorico</span><span class="index-time">~2-3 min</span></div>
+  <div class="index-item" data-target="8"><span class="index-num">8</span><span class="index-title">Metodologia</span><span class="index-time">~3 min</span></div>
+  <div class="index-item" data-target="9"><span class="index-num">9</span><span class="index-title">Analisis de Resultados</span><span class="index-time">~4-5 min</span></div>
+  <div class="index-item" data-target="10"><span class="index-num">10</span><span class="index-title">Conclusiones</span><span class="index-time">~2-3 min</span></div>
+  <div class="index-item" data-target="11"><span class="index-num">11</span><span class="index-title">Recomendaciones</span><span class="index-time">~2 min</span></div>
+  <div class="index-item" data-target="12"><span class="index-num">12</span><span class="index-title">Cierre / Agradecimiento</span><span class="index-time">~30s</span></div>
+</div>
+
+<div id="guide"></div>
+<div id="fade-top"></div>
+<div id="fade-bottom"></div>
+<div id="pause-overlay"><span>PAUSA</span></div>
+
+<div id="hints">
+  <kbd>Espacio</kbd> Play/Pausa &nbsp;
+  <kbd>&uarr;</kbd><kbd>&darr;</kbd> Velocidad &nbsp;
+  <kbd>+</kbd><kbd>-</kbd> Fuente &nbsp;
+  <kbd>I</kbd> Indice &nbsp;
+  <kbd>1</kbd>-<kbd>9</kbd><kbd>0</kbd> Ir a slide &nbsp;
+  <kbd>R</kbd> Reiniciar &nbsp;
+  <kbd>T</kbd> Tips &nbsp;
+  <kbd>M</kbd> Espejo &nbsp;
+  <kbd>H</kbd> Ocultar controles
+</div>
+
+<script>
+  const content = document.getElementById('content');
+  const speedSlider = document.getElementById('speed');
+  const fontSlider = document.getElementById('fontsize');
+  const speedDisplay = document.getElementById('speed-display');
+  const fontDisplay = document.getElementById('font-display');
+  const timeDisplay = document.getElementById('time-display');
+  const slideDisplay = document.getElementById('slide-display');
+  const btnPlay = document.getElementById('btn-play');
+  const pauseOverlay = document.getElementById('pause-overlay');
+  const controls = document.getElementById('controls');
+
+  let playing = false;
+  let speed = 1.2; // pixels per frame at 60fps
+  let position = window.innerHeight * 0.9;
+  let startTime = null;
+  let elapsedBeforePause = 0;
+  let tipsVisible = true;
+  let animFrame = null;
+
+  content.style.top = position + 'px';
+
+  function updatePosition() {
+    content.style.top = position + 'px';
+  }
+
+  function getCurrentSlide() {
+    const headers = document.querySelectorAll('.slide-header');
+    const guideY = window.innerHeight * 0.35;
+    let current = '';
+    headers.forEach(h => {
+      const rect = h.getBoundingClientRect();
+      if (rect.top < guideY + 100) {
+        current = h.textContent.trim().split('\n')[0];
+      }
+    });
+    return current;
+  }
+
+  function animate() {
+    if (playing) {
+      position -= speed;
+      updatePosition();
+
+      // Update time
+      const elapsed = elapsedBeforePause + (Date.now() - startTime);
+      const sec = Math.floor(elapsed / 1000);
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      timeDisplay.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+
+      // Update current slide
+      slideDisplay.textContent = getCurrentSlide().substring(0, 40);
+
+      animFrame = requestAnimationFrame(animate);
+    }
+  }
+
+  function togglePlay() {
+    playing = !playing;
+    if (playing) {
+      startTime = Date.now();
+      btnPlay.innerHTML = '&#9646;&#9646; Pausa';
+      btnPlay.classList.add('active');
+      pauseOverlay.classList.remove('visible');
+      animate();
+    } else {
+      elapsedBeforePause += (Date.now() - startTime);
+      btnPlay.innerHTML = '&#9654; Play';
+      btnPlay.classList.remove('active');
+      cancelAnimationFrame(animFrame);
+    }
+  }
+
+  function toggleTips() {
+    tipsVisible = !tipsVisible;
+    document.querySelectorAll('.tip').forEach(t => {
+      t.classList.toggle('hidden', !tipsVisible);
+    });
+    document.getElementById('btn-tips').textContent = 'Tips: ' + (tipsVisible ? 'ON' : 'OFF');
+  }
+
+  function toggleMirror() {
+    document.body.classList.toggle('mirror');
+  }
+
+  function resetPosition() {
+    playing = false;
+    position = window.innerHeight * 0.9;
+    updatePosition();
+    elapsedBeforePause = 0;
+    startTime = null;
+    timeDisplay.textContent = '00:00';
+    btnPlay.innerHTML = '&#9654; Play';
+    btnPlay.classList.remove('active');
+    pauseOverlay.classList.remove('visible');
+    cancelAnimationFrame(animFrame);
+  }
+
+  speedSlider.addEventListener('input', () => {
+    speed = parseFloat(speedSlider.value);
+    speedDisplay.textContent = speed.toFixed(1);
+  });
+
+  fontSlider.addEventListener('input', () => {
+    const size = parseFloat(fontSlider.value);
+    fontDisplay.textContent = size.toFixed(1);
+    document.querySelectorAll('.speech').forEach(p => {
+      p.style.fontSize = size + 'em';
+    });
+  });
+
+  // Index panel
+  const indexPanel = document.getElementById('index-panel');
+  const indexOverlay = document.getElementById('index-overlay');
+  const btnIndex = document.getElementById('btn-index');
+  let indexOpen = false;
+
+  function toggleIndex() {
+    indexOpen = !indexOpen;
+    indexPanel.classList.toggle('open', indexOpen);
+    indexOverlay.classList.toggle('open', indexOpen);
+    btnIndex.classList.toggle('active', indexOpen);
+  }
+
+  function goToSlide(slideNum) {
+    const header = document.querySelector(`.slide-header[data-slide="${slideNum}"]`);
+    if (!header) return;
+    const headerTop = header.offsetTop;
+    const guideY = window.innerHeight * 0.35;
+    position = -headerTop + guideY;
+    updatePosition();
+    // Close index
+    if (indexOpen) toggleIndex();
+    // Highlight active
+    document.querySelectorAll('.index-item').forEach(el => el.classList.remove('active'));
+    document.querySelector(`.index-item[data-target="${slideNum}"]`)?.classList.add('active');
+  }
+
+  // Index item click handlers
+  document.querySelectorAll('.index-item').forEach(item => {
+    item.addEventListener('click', () => {
+      goToSlide(item.dataset.target);
+    });
+  });
+
+  // Number keys 1-9 jump to slides, 0 = slide 10
+  // Prevent focus on buttons/sliders stealing spacebar
+  document.querySelectorAll('button, input').forEach(el => {
+    el.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        e.stopPropagation();
+        togglePlay();
+      }
+    });
+  });
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    switch(e.code) {
+      case 'Space':
+        e.preventDefault();
+        togglePlay();
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        speed = Math.min(5, speed + 0.2);
+        speedSlider.value = speed;
+        speedDisplay.textContent = speed.toFixed(1);
+        break;
+      case 'ArrowDown':
+        e.preventDefault();
+        speed = Math.max(0.2, speed - 0.2);
+        speedSlider.value = speed;
+        speedDisplay.textContent = speed.toFixed(1);
+        break;
+      case 'Equal':
+      case 'NumpadAdd':
+        e.preventDefault();
+        fontSlider.value = Math.min(4, parseFloat(fontSlider.value) + 0.2);
+        fontSlider.dispatchEvent(new Event('input'));
+        break;
+      case 'Minus':
+      case 'NumpadSubtract':
+        e.preventDefault();
+        fontSlider.value = Math.max(1, parseFloat(fontSlider.value) - 0.2);
+        fontSlider.dispatchEvent(new Event('input'));
+        break;
+      case 'KeyR':
+        resetPosition();
+        break;
+      case 'KeyT':
+        toggleTips();
+        break;
+      case 'KeyM':
+        toggleMirror();
+        break;
+      case 'KeyH':
+        controls.classList.toggle('hidden');
+        break;
+      case 'KeyI':
+        toggleIndex();
+        break;
+      case 'Digit1': goToSlide('1'); break;
+      case 'Digit2': goToSlide('2'); break;
+      case 'Digit3': goToSlide('3'); break;
+      case 'Digit4': goToSlide('4'); break;
+      case 'Digit5': goToSlide('5'); break;
+      case 'Digit6': goToSlide('6'); break;
+      case 'Digit7': goToSlide('7'); break;
+      case 'Digit8': goToSlide('8'); break;
+      case 'Digit9': goToSlide('9'); break;
+      case 'Digit0': goToSlide('10'); break;
+    }
+  });
+
+  // Mouse wheel for manual scroll
+  document.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    position -= e.deltaY * 0.5;
+    updatePosition();
+  }, { passive: false });
+</script>
+
+</body>
+</html>
