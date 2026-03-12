@@ -1089,3 +1089,111 @@ const FLASHCARDS = [
     back: 'Documentos producidos fuera de los canales de publicacion academica convencional: informes institucionales, tesis no publicadas, documentos de trabajo. Fue una limitacion de esta tesis no incluirla.'
   }
 ];
+
+// ============================================================
+// PREGUNTAS DEL JURADO
+// ============================================================
+
+var JURADO_PREGUNTAS = [
+  // --- CASI SEGURAS ---
+  {
+    category: 'Casi Seguras',
+    question: 'Por que eligio una Revision Sistematica de Literatura y no un estudio empirico?',
+    answer: 'El campo de los SIG en gestion educativa presenta alta fragmentacion conceptual y metodologica. Existen estudios dispersos en multiples disciplinas (informatica, educacion, administracion) con terminologia inconsistente. La RSL permite sintetizar y unificar esta evidencia bajo un marco analitico coherente. Ademas, antes de disenar intervenciones empiricas, es fundamental mapear el estado del conocimiento existente. La RSL con protocolo Kitchenham & Charters y PRISMA 2020 aporta rigor metodologico reproducible, y el uso de ATLAS.ti anade una dimension cuantitativa al analisis cualitativo.',
+    tip: 'Enfatizar que la RSL no es "menos" que un estudio empirico, sino un paso previo necesario. Mencionar que el protocolo PRISMA 2020 es estandar internacional.'
+  },
+  {
+    category: 'Casi Seguras',
+    question: 'Como justifica la seleccion de solo 32 estudios de 650 iniciales?',
+    answer: 'El ratio de inclusion (~5%) es consistente con otras RSL publicadas con protocolo PRISMA. De los 650 registros iniciales: 258 fueron duplicados eliminados automaticamente, quedando 392. De estos, 304 fueron excluidos por titulo y resumen al no cumplir criterios de relevancia. De los 88 elegibles tras lectura completa, 56 fueron excluidos por no cumplir criterios de calidad o pertinencia. Los 32 estudios finales representan la evidencia mas robusta y pertinente. Este proceso esta documentado paso a paso en el diagrama PRISMA del capitulo metodologico.',
+    tip: 'Tener a mano el diagrama PRISMA. Si cuestionan el numero, mencionar RSL similares publicadas en revistas indexadas con ratios comparables.'
+  },
+  {
+    category: 'Casi Seguras',
+    question: 'Cual es el hallazgo mas importante de su investigacion?',
+    answer: 'Las barreras organizacionales son MAS determinantes que las tecnologicas para el exito de los SIG en gestion educativa. La resistencia al cambio aparecio en 26 de 32 estudios, superando incluso a las limitaciones de infraestructura (17/32). Esto implica que invertir en tecnologia sin invertir en personas y procesos es receta para el fracaso. El liderazgo institucional (25/32) y la capacitacion estrategica (22/32) son los facilitadores mas criticos. La conclusion es que los SIG son herramientas necesarias pero no suficientes.',
+    tip: 'Esta es LA respuesta estrella. Decirla con conviccion. Usar las cifras de co-ocurrencia de ATLAS.ti como evidencia.'
+  },
+  {
+    category: 'Casi Seguras',
+    question: 'Que evidencia tiene sobre la importancia de la gobernanza de datos?',
+    answer: 'El analisis de co-ocurrencia en ATLAS.ti revelo una asociacion alta entre "falta de interoperabilidad" y "silos de informacion". Estudios como Kaindaneh y de Kadt (2024) y Sequeira et al. (2024) confirman que sin gobernanza de datos efectiva, los SIG generan informacion fragmentada e inutil para la toma de decisiones. Bajo el modelo DeLone & McLean, sin calidad de informacion no puede haber beneficios netos. La gobernanza de datos no es un problema tecnico sino de politicas y liderazgo institucional.',
+    tip: 'Conectar con el modelo teorico DeLone & McLean. Mencionar autores especificos da solidez.'
+  },
+  // --- PROBABLES ---
+  {
+    category: 'Probables',
+    question: 'Como se aplican sus hallazgos al contexto de America Latina?',
+    answer: 'Las barreras identificadas son especialmente pronunciadas en America Latina: la brecha digital urbano-rural limita la infraestructura, la resistencia al cambio tiene componentes culturales mas arraigados, y los recursos financieros para capacitacion son limitados. Sin embargo, los hallazgos son esperanzadores: dado que las barreras principales son organizacionales (no tecnologicas), paises con recursos limitados pueden avanzar priorizando liderazgo, gobernanza de datos y capacitacion estrategica antes que grandes inversiones en software.',
+    tip: 'Destacar que las recomendaciones son especialmente pertinentes para contextos con recursos limitados. Mencionar la brecha Colombia vs global.'
+  },
+  {
+    category: 'Probables',
+    question: 'Cual es la diferencia entre su estudio y otras revisiones sistematicas sobre SIG educativos?',
+    answer: 'Tres diferencias fundamentales: (1) Enfoque integrador bajo perspectiva socio-tecnica que analiza la interaccion tecnologia-personas-procesos-contexto, no solo la tecnologia. (2) Integracion de las 4 tipologias de SIG (EMIS, SIS, ERP, BI/Analytics) bajo un mismo marco analitico, cuando la mayoria de RSL se enfocan en una sola tipologia. (3) Uso de ATLAS.ti para analisis de co-ocurrencia, que aporta una dimension cuantitativa rigurosa a un estudio cualitativo, permitiendo identificar patrones no evidentes.',
+    tip: 'Enfatizar el valor agregado de la perspectiva socio-tecnica como eje transversal.'
+  },
+  {
+    category: 'Probables',
+    question: 'Que haria diferente si repitiera la investigacion?',
+    answer: 'Tres mejoras principales: (1) Incluir "literatura gris" (informes institucionales, documentos de politica publica, tesis no publicadas) para reducir el sesgo de publicacion. (2) Extender la busqueda a mas bases de datos de America Latina y el Caribe. (3) Complementar la RSL con entrevistas a directivos educativos y responsables de TI para triangular los hallazgos documentales con la experiencia practica en campo.',
+    tip: 'Mostrar autocritica constructiva. No es debilidad reconocer limitaciones, es madurez investigativa.'
+  },
+  {
+    category: 'Probables',
+    question: 'Como se relacionan los tres modelos teoricos (DeLone & McLean, TOE, UTAUT)?',
+    answer: 'Los tres modelos operan en niveles complementarios: DeLone & McLean evalua el EXITO del sistema (calidad del sistema, calidad de informacion, calidad de servicio, uso, satisfaccion, beneficios netos). TOE de Tornatzky & Fleischer analiza las CONDICIONES para la adopcion (factores Tecnologicos, Organizacionales y del Entorno). UTAUT de Venkatesh explica la ACEPTACION individual (expectativa de desempeno, expectativa de esfuerzo, influencia social, condiciones facilitadoras). Juntos, cubren desde lo macro-institucional hasta lo micro-individual, integrados bajo la perspectiva socio-tecnica.',
+    tip: 'Si preguntan por un modelo especifico, dar ejemplos concretos de como se aplico en el analisis.'
+  },
+  // --- DIFICILES ---
+  {
+    category: 'Dificiles',
+    question: 'Que papel juega la inteligencia artificial en los SIG educativos actuales?',
+    answer: 'La IA representa la frontera emergente de los SIG educativos, especialmente en analitica predictiva (identificar estudiantes en riesgo de desercion), personalizacion del aprendizaje y automatizacion de reportes. Sin embargo, mi revision (2014-2025) muestra que la mayoria de instituciones aun no han consolidado el uso basico de SIG. La IA es la proxima etapa, pero requiere primero resolver las barreras actuales: calidad de datos, gobernanza, interoperabilidad. Es una brecha identificada en el OE4 que abre lineas de investigacion futura.',
+    tip: 'Reconocer la relevancia de la IA pero anclar en la realidad de los hallazgos. No especular mas alla de la evidencia.'
+  },
+  {
+    category: 'Dificiles',
+    question: 'Como manejo el sesgo de publicacion en su revision?',
+    answer: 'El sesgo de publicacion es una limitacion reconocida y transparente. Se mitigo parcialmente mediante: (1) busqueda en 8 bases de datos complementarias (Scopus, WoS, ERIC, ScienceDirect, SciELO, Redalyc, Dialnet, Google Scholar), (2) inclusion de articulos en 3 idiomas (espanol, ingles, portugues), (3) evaluacion de calidad con criterios predefinidos. La principal mitigacion fue la diversidad de fuentes. La inclusion de literatura gris habria reducido aun mas este sesgo, y se reconoce como area de mejora.',
+    tip: 'Transparencia es clave. Reconocer la limitacion y mostrar las medidas tomadas para mitigarla.'
+  },
+  {
+    category: 'Dificiles',
+    question: 'Puede generalizar conclusiones a partir de solo 32 estudios?',
+    answer: 'En una RSL, la generalizacion no depende del numero absoluto sino de la representatividad y calidad de los estudios incluidos. Los 32 estudios cubren: multiples contextos geograficos (America Latina, Africa, Asia, Europa), diferentes niveles educativos (basica, superior, posgrado), las 4 tipologias de SIG, y un periodo de 11 anos. La convergencia de hallazgos (ej: resistencia al cambio en 26/32) a traves de contextos tan diversos fortalece la generalizacion analitica, no estadistica. Es transferibilidad, no generalizacion positivista.',
+    tip: 'Distinguir entre generalizacion estadistica y analitica/transferibilidad. Es un concepto clave en investigacion cualitativa.'
+  },
+  {
+    category: 'Dificiles',
+    question: 'Por que uso ATLAS.ti y no otro software como NVivo?',
+    answer: 'ATLAS.ti fue seleccionado por tres razones: (1) capacidad robusta de analisis de co-ocurrencia que permite cuantificar asociaciones entre codigos cualitativos, (2) interfaz intuitiva para manejo de documentos en multiples idiomas (espanol, ingles, portugues), y (3) disponibilidad institucional. Tanto ATLAS.ti como NVivo son herramientas validadas para investigacion cualitativa; la eleccion no afecta la validez de los resultados sino la eficiencia del proceso.',
+    tip: 'No entrar en debate ATLAS.ti vs NVivo. Ambos son validos. Enfocarse en por que funciono para esta investigacion.'
+  },
+  // --- PERSONALES ---
+  {
+    category: 'Personales',
+    question: 'Cual fue su motivacion personal para esta investigacion?',
+    answer: 'Mi experiencia profesional en la industria tecnologica me ha permitido observar como las organizaciones implementan sistemas de informacion con resultados muy dispares. En el sector educativo, vi como instituciones invertian en tecnologia sin obtener mejoras reales en la gestion. Esto desperto mi interes por entender que factores determinan el exito o fracaso de estas implementaciones. El doctorado fue la oportunidad de investigar sistematicamente lo que habia observado empiricamente durante anos.',
+    tip: 'Conectar la experiencia profesional con la motivacion academica. Ser autentico.'
+  },
+  {
+    category: 'Personales',
+    question: 'Cuales fueron los principales obstaculos durante su investigacion?',
+    answer: 'Varios obstaculos significativos: (1) Compatibilizar el doctorado con un rol demandante en la industria tecnologica, lo que requirio disciplina extrema en gestion del tiempo. (2) La busqueda en tres idiomas (incluyendo portugues, que no es mi lengua nativa) anadio complejidad al proceso de seleccion y analisis. (3) Hubo periodos de pausa por compromisos profesionales que dificultaron retomar el ritmo, requiriendo esfuerzo adicional para nivelar el cronograma. (4) La decision metodologica de una RSL fue cuestionada inicialmente, pero se valido como enfoque riguroso en ingenieria.',
+    tip: 'Mostrar resiliencia sin victimizarse. Los obstaculos superados demuestran compromiso.'
+  },
+  {
+    category: 'Personales',
+    question: 'Como proyecta continuar esta linea de investigacion?',
+    answer: 'Tres lineas de continuidad: (1) Un estudio empirico en instituciones educativas colombianas que valide los hallazgos de la RSL en contexto local, con entrevistas y observacion. (2) Investigar el impacto de la IA y analitica avanzada en SIG educativos, la brecha mas significativa identificada. (3) Desarrollar un marco de madurez para SIG educativos que permita a las instituciones evaluar su estado actual y trazar una hoja de ruta de mejora.',
+    tip: 'Mostrar vision a futuro. Un doctorado no es el final sino el inicio de la carrera investigativa.'
+  },
+  // --- TRAMPA ---
+  {
+    category: 'Trampa',
+    question: 'Entonces, los SIG son la solucion a los problemas de gestion educativa?',
+    answer: 'No. Y precisamente ese es uno de los hallazgos centrales de esta tesis. Los SIG son herramientas NECESARIAS pero NO SUFICIENTES. Un SIG por si solo no resuelve problemas de gestion; puede incluso agravarlos si se implementa sin considerar el contexto organizacional. La evidencia muestra que el exito depende de un ecosistema: liderazgo comprometido, capacitacion estrategica, gobernanza de datos y gestion del cambio. Es la perspectiva socio-tecnica: la tecnologia es solo un componente de un sistema mas amplio de personas, procesos y contexto.',
+    tip: 'CUIDADO: pregunta trampa. Responder con un "No" rotundo al inicio y luego desarrollar. Nunca decir que los SIG son LA solucion.'
+  }
+];

@@ -178,4 +178,91 @@
       }
     });
   });
+
+  // --- Preguntas del Jurado ---
+  var juradoFilterContainer = document.getElementById('jurado-filter-container');
+  var juradoCounter = document.getElementById('jurado-counter');
+  var juradoContainer = document.getElementById('jurado-container');
+
+  // Extract unique categories
+  var juradoCategories = [];
+  JURADO_PREGUNTAS.forEach(function (p) {
+    if (juradoCategories.indexOf(p.category) === -1) {
+      juradoCategories.push(p.category);
+    }
+  });
+
+  // Render filter buttons
+  var allBtn = document.createElement('button');
+  allBtn.className = 'filter-btn active';
+  allBtn.textContent = 'Todas (' + JURADO_PREGUNTAS.length + ')';
+  allBtn.setAttribute('data-filter', 'all');
+  juradoFilterContainer.appendChild(allBtn);
+
+  juradoCategories.forEach(function (cat) {
+    var count = JURADO_PREGUNTAS.filter(function (p) { return p.category === cat; }).length;
+    var btn = document.createElement('button');
+    btn.className = 'filter-btn';
+    btn.textContent = cat + ' (' + count + ')';
+    btn.setAttribute('data-filter', cat);
+    juradoFilterContainer.appendChild(btn);
+  });
+
+  function renderJuradoCards(filter) {
+    juradoContainer.innerHTML = '';
+    var filtered = filter === 'all' ? JURADO_PREGUNTAS : JURADO_PREGUNTAS.filter(function (p) {
+      return p.category === filter;
+    });
+
+    juradoCounter.textContent = 'Mostrando ' + filtered.length + ' de ' + JURADO_PREGUNTAS.length + ' preguntas';
+
+    filtered.forEach(function (p) {
+      var card = document.createElement('div');
+      card.className = 'jurado-card';
+      card.setAttribute('data-category', p.category);
+
+      var header = document.createElement('button');
+      header.className = 'jurado-header';
+      header.innerHTML =
+        '<span class="jurado-question">' + p.question + '</span>' +
+        '<span class="jurado-badge" data-category="' + p.category + '">' + p.category + '</span>';
+
+      var body = document.createElement('div');
+      body.className = 'jurado-body';
+
+      var content = document.createElement('div');
+      content.className = 'jurado-content';
+      content.innerHTML =
+        '<div class="jurado-answer">' + p.answer + '</div>' +
+        '<div class="jurado-tip"><strong>TIP:</strong> ' + p.tip + '</div>';
+
+      body.appendChild(content);
+      card.appendChild(header);
+      card.appendChild(body);
+      juradoContainer.appendChild(card);
+
+      header.addEventListener('click', function () {
+        var isOpen = card.classList.contains('open');
+        document.querySelectorAll('.jurado-card').forEach(function (jc) {
+          jc.classList.remove('open');
+        });
+        if (!isOpen) {
+          card.classList.add('open');
+        }
+      });
+    });
+  }
+
+  // Filter click handlers
+  juradoFilterContainer.addEventListener('click', function (e) {
+    if (!e.target.classList.contains('filter-btn')) return;
+    juradoFilterContainer.querySelectorAll('.filter-btn').forEach(function (b) {
+      b.classList.remove('active');
+    });
+    e.target.classList.add('active');
+    renderJuradoCards(e.target.getAttribute('data-filter'));
+  });
+
+  // Initial render
+  renderJuradoCards('all');
 })();

@@ -895,6 +895,116 @@ body {
   line-height: 1.5;
 }
 
+/* --- JURADO SECTION --- */
+
+.jurado-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.jurado-counter {
+  text-align: center;
+  color: var(--text-light);
+  font-size: 0.88rem;
+  margin-bottom: 1rem;
+}
+
+.jurado-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 0.75rem;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  border-left: 4px solid var(--border);
+}
+
+.jurado-card[data-category="Casi Seguras"] { border-left-color: #c0392b; }
+.jurado-card[data-category="Probables"] { border-left-color: #e67e22; }
+.jurado-card[data-category="Dificiles"] { border-left-color: #f39c12; }
+.jurado-card[data-category="Personales"] { border-left-color: var(--accent); }
+.jurado-card[data-category="Trampa"] { border-left-color: #8e44ad; }
+
+.jurado-header {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.2s;
+  gap: 0.75rem;
+}
+
+.jurado-header:hover {
+  background: rgba(26, 58, 92, 0.04);
+}
+
+.jurado-question {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--primary);
+  flex: 1;
+  line-height: 1.4;
+}
+
+.jurado-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  border-radius: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  color: #fff;
+}
+
+.jurado-badge[data-category="Casi Seguras"] { background: #c0392b; }
+.jurado-badge[data-category="Probables"] { background: #e67e22; }
+.jurado-badge[data-category="Dificiles"] { background: #f39c12; color: #333; }
+.jurado-badge[data-category="Personales"] { background: var(--accent); }
+.jurado-badge[data-category="Trampa"] { background: #8e44ad; }
+
+.jurado-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.jurado-card.open .jurado-body {
+  max-height: 5000px;
+}
+
+.jurado-content {
+  padding: 0 1.25rem 1.25rem;
+  font-size: 0.92rem;
+  color: var(--text);
+}
+
+.jurado-answer {
+  line-height: 1.7;
+  margin-bottom: 0.85rem;
+}
+
+.jurado-tip {
+  background: #fef8e1;
+  border-left: 4px solid #d4a017;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0 6px 6px 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.jurado-tip strong {
+  color: #b8860b;
+}
+
 /* --- UTILITIES --- */
 
 .hidden {
